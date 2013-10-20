@@ -1,0 +1,12 @@
+{
+  "name": "angular",
+  "description": "angular componentizd!",
+  "version": "",
+  "keywords": [],
+  "dependencies": {},
+  "scripts": [
+    "build/angular-animate.js",
+    "index.js"
+  ],
+  "styles": []
+}
