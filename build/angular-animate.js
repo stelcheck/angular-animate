@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.2.0-ec88785
+ * @license AngularJS v1.2.0-597cb96
  * (c) 2010-2012 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -14,9 +14,11 @@
  *
  * # ngAnimate
  *
- * `ngAnimate` is an optional module that provides CSS and JavaScript animation hooks.
+ * The `ngAnimate` module provides support for JavaScript and CSS3 animation hooks within core and custom directives.
  *
  * {@installModule animate}
+ *
+ * <div doc-module-components="ngAnimate"></div>
  *
  * # Usage
  *
