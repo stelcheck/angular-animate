@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.2.0-8274f2a
+ * @license AngularJS v1.2.0-0c4bbd3
  * (c) 2010-2012 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -545,6 +545,16 @@ angular.module('ngAnimate', ['ng'])
           $timeout.cancel(ngAnimateState.flagTimer);
           cancelAnimations(ngAnimateState.animations);
           (ngAnimateState.done || noop)();
+        }
+
+        //There is no point in perform a class-based animation if the element already contains
+        //(on addClass) or doesn't contain (on removeClass) the className being animated.
+        //The reason why this is being called after the previous animations are cancelled
+        //is so that the CSS classes present on the element can be properly examined.
+        if((event == 'addClass'    && element.hasClass(className)) ||
+           (event == 'removeClass' && !element.hasClass(className))) {
+          onComplete && onComplete();
+          return;
         }
 
         element.data(NG_ANIMATE_STATE, {
