@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.2.0-11aabf9
+ * @license AngularJS v1.2.0-6b19704
  * (c) 2010-2012 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -594,6 +594,7 @@ angular.module('ngAnimate', ['ng'])
           //if an animation is currently running on the element then lets take the steps
           //to cancel that animation and fire any required callbacks
           $timeout.cancel(ngAnimateState.flagTimer);
+          cleanup(element);
           cancelAnimations(ngAnimateState.animations);
           (ngAnimateState.done || noop)();
         }
@@ -702,29 +703,28 @@ angular.module('ngAnimate', ['ng'])
       }
 
       function animationsDisabled(element, parent) {
-        if(element == $rootElement) {
+        if(element[0] == $rootElement[0]) {
           return rootAnimateState.disabled || rootAnimateState.running;
         }
 
-        var validState;
         do {
           //the element did not reach the root element which means that it
           //is not apart of the DOM. Therefore there is no reason to do
           //any animations on it
-          if(parent.length === 0) return true;
+          if(parent.length === 0) break;
 
           var isRoot = parent[0] == $rootElement[0];
           var state = isRoot ? rootAnimateState : parent.data(NG_ANIMATE_STATE);
-          if(state && (state.disabled != null || state.running != null)) {
-            validState = state;
-            break;
+          var result = state && (!!state.disabled || !!state.running);
+          if(isRoot || result) {
+            return result;
           }
 
           if(isRoot) return true;
         }
         while(parent = parent.parent());
 
-        return validState ? (validState.disabled || validState.running) : true;
+        return true;
       }
     }]);
 
