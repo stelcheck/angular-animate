@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.2.0-1f3b38f
+ * @license AngularJS v1.2.0-8c86978
  * (c) 2010-2012 Google, Inc. http://angularjs.org
  * License: MIT
  */
