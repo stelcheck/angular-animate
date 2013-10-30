@@ -5,7 +5,7 @@
 # AngularJS API Docs
 Welcome to the AngularJS API docs page. These pages contain the AngularJS reference materials for version <strong ng-bind="version"></strong>.
 
-The docs are organized into **modules** which contain various components of an AngularJS application.
+The documentation is organized into **modules** which contain various components of an AngularJS application.
 These components are directives, services, filters, providers, types, global APIs and testing mocks.
 
 ## {@link ng ng (core module)}
@@ -21,9 +21,9 @@ This module is provided by default and contains the core components of AngularJS
 
       <p>
         Some examples include:
-          {@link ng.ngClick ngClick},
-          {@link ng.ngInclude ngInclude},
-          {@link ng.ngInclude ngRepeat},
+          {@link ng.directive:ngClick ngClick},
+          {@link ng.directive:ngInclude ngInclude},
+          {@link ng.directive:ngRepeat ngRepeat},
           etc… <br />
       </p>
     </td>
@@ -40,7 +40,7 @@ This module is provided by default and contains the core components of AngularJS
         Some examples include:
           {@link ng.$compile $compile},
           {@link ng.$http $http},
-          {@link ng.$routeParams $routeParams},
+          {@link ngRoute.$routeParams $routeParams},
           {@link ng.$location $location},
           etc…
       <p>
@@ -146,7 +146,7 @@ or JavaScript callbacks.
       {@link ngAnimate JS-based animations}
     </td>
     <td>
-      Use {@link angular.Module#animation module.animation()} to register a JavaScript animation. Once registered the animation can be triggered by referencing the CSS class within the HTML template code.
+      Use {@link angular.Module#methods_animation module.animation()} to register a JavaScript animation. Once registered the animation can be triggered by referencing the CSS class within the HTML template code.
     </td>
   </tr>
 </table>
