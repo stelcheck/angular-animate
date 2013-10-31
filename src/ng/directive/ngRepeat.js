@@ -214,6 +214,7 @@ var ngRepeatDirective = ['$parse', '$animate', function($parse, $animate) {
     transclude: 'element',
     priority: 1000,
     terminal: true,
+    $$tlb: true,
     compile: function(element, attr, linker) {
       return function($scope, $element, $attr){
         var expression = $attr.ngRepeat;
@@ -393,22 +394,5 @@ var ngRepeatDirective = ['$parse', '$animate', function($parse, $animate) {
       };
     }
   };
-
-  function getBlockElements(block) {
-    if (block.startNode === block.endNode) {
-      return jqLite(block.startNode);
-    }
-
-    var element = block.startNode;
-    var elements = [element];
-
-    do {
-      element = element.nextSibling;
-      if (!element) break;
-      elements.push(element);
-    } while (element !== block.endNode);
-
-    return jqLite(elements);
-  }
 }];
 
