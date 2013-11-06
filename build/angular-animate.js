@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.2.0-4d82caa
+ * @license AngularJS v1.2.0-dcc0aa6
  * (c) 2010-2012 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -795,19 +795,30 @@ angular.module('ngAnimate', ['ng'])
         var data = cacheKey ? lookupCache[cacheKey] : null;
         if(!data) {
           var transitionDuration = 0, transitionDelay = 0,
-              animationDuration = 0, animationDelay = 0;
+              animationDuration = 0, animationDelay = 0,
+              transitionDelayStyle, animationDelayStyle,
+              transitionDurationStyle,
+              transitionPropertyStyle;
 
           //we want all the styles defined before and after
           forEach(element, function(element) {
             if (element.nodeType == ELEMENT_NODE) {
               var elementStyles = $window.getComputedStyle(element) || {};
 
-              transitionDuration = Math.max(parseMaxTime(elementStyles[transitionProp + durationKey]), transitionDuration);
+              transitionDurationStyle = elementStyles[transitionProp + durationKey];
+
+              transitionDuration = Math.max(parseMaxTime(transitionDurationStyle), transitionDuration);
 
               if(!onlyCheckTransition) {
-                transitionDelay  = Math.max(parseMaxTime(elementStyles[transitionProp + delayKey]), transitionDelay);
+                transitionPropertyStyle = elementStyles[transitionProp + propertyKey];
 
-                animationDelay   = Math.max(parseMaxTime(elementStyles[animationProp + delayKey]), animationDelay);
+                transitionDelayStyle = elementStyles[transitionProp + delayKey];
+
+                transitionDelay  = Math.max(parseMaxTime(transitionDelayStyle), transitionDelay);
+
+                animationDelayStyle = elementStyles[animationProp + delayKey];
+
+                animationDelay   = Math.max(parseMaxTime(animationDelayStyle), animationDelay);
 
                 var aDuration  = parseMaxTime(elementStyles[animationProp + durationKey]);
 
@@ -821,10 +832,14 @@ angular.module('ngAnimate', ['ng'])
           });
           data = {
             total : 0,
-            transitionDelay : transitionDelay,
-            animationDelay : animationDelay,
-            transitionDuration : transitionDuration,
-            animationDuration : animationDuration
+            transitionPropertyStyle: transitionPropertyStyle,
+            transitionDurationStyle: transitionDurationStyle,
+            transitionDelayStyle: transitionDelayStyle,
+            transitionDelay: transitionDelay,
+            transitionDuration: transitionDuration,
+            animationDelayStyle: animationDelayStyle,
+            animationDelay: animationDelay,
+            animationDuration: animationDuration
           };
           if(cacheKey) {
             lookupCache[cacheKey] = data;
@@ -895,7 +910,7 @@ angular.module('ngAnimate', ['ng'])
             node.style[transitionProp + propertyKey] = 'none';
           }
 
-          var activeClassName = '';
+          var activeClassName = 'ng-animate-active ';
           forEach(className.split(' '), function(klass, i) {
             activeClassName += (i > 0 ? ' ' : '') + klass + '-active';
           });
@@ -904,18 +919,45 @@ angular.module('ngAnimate', ['ng'])
 
           // This triggers a reflow which allows for the transition animation to kick in.
           afterReflow(function() {
+            if(!element.hasClass(className)) {
+              done();
+              return;
+            }
+
+            var applyFallbackStyle, style = '';
             if(timings.transitionDuration > 0) {
               node.style[transitionProp + propertyKey] = '';
-              if(ii > 0 && stagger.transitionDelay > 0 && stagger.transitionDuration === 0) {
-                formerStyle = applyStyle(node, prefix + 'transition-delay: ' +
-                  (ii * stagger.transitionDelay + timings.transitionDelay) + 's');
+
+              var propertyStyle = timings.transitionPropertyStyle;
+              if(propertyStyle.indexOf('all') == -1) {
+                applyFallbackStyle = true;
+                var fallbackProperty = $sniffer.msie ? '-ms-zoom' : 'clip';
+                style += prefix + 'transition-property: ' + propertyStyle + ', ' + fallbackProperty + '; ';
+                style += prefix + 'transition-duration: ' + timings.transitionDurationStyle + ', ' + timings.transitionDuration + 's; ';
               }
             }
 
-            if(ii > 0 && stagger.animationDelay > 0 && stagger.animationDuration === 0) {
-              formerStyle = applyStyle(node, prefix + 'animation-delay: ' +
-                (ii * stagger.animationDelay + timings.animationDelay) + 's');
+            if(ii > 0) {
+              if(stagger.transitionDelay > 0 && stagger.transitionDuration === 0) {
+                var delayStyle = timings.transitionDelayStyle;
+                if(applyFallbackStyle) {
+                  delayStyle += ', ' + timings.transitionDelay + 's';
+                }
+
+                style += prefix + 'transition-delay: ' +
+                         prepareStaggerDelay(delayStyle, stagger.transitionDelay, ii) + '; ';
+              }
+
+              if(stagger.animationDelay > 0 && stagger.animationDuration === 0) {
+                style += prefix + 'animation-delay: ' +
+                         prepareStaggerDelay(timings.animationDelayStyle, stagger.animationDelay, ii) + '; ';
+              }
             }
+
+            if(style.length > 0) {
+              formerStyle = applyStyle(node, style);
+            }
+
             element.addClass(activeClassName);
           });
 
@@ -947,6 +989,15 @@ angular.module('ngAnimate', ['ng'])
         else {
           element.removeClass(className);
           done();
+        }
+
+        function prepareStaggerDelay(delayStyle, staggerDelay, index) {
+          var style = '';
+          angular.forEach(delayStyle.split(','), function(val, i) {
+            style += (i > 0 ? ',' : '') +
+                     (index * staggerDelay + parseInt(val, 10)) + 's';
+          });
+          return style;
         }
 
         function onAnimationProgress(event) {
