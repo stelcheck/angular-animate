@@ -1,5 +1,9 @@
 <a name="1.2.0"></a>
+<<<<<<< HEAD
 # 1.2.0 timely-release (2013-11-08)
+=======
+# 1.2.0 timely-delivery (2013-11-08)
+>>>>>>> 44fe7b6dbb06b70aa9dd635897626b8f5db6615f
 
 
 
