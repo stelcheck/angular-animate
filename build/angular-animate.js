@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.2.0-5d642d2
+ * @license AngularJS v1.2.0-1b5753b
  * (c) 2010-2012 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -262,12 +262,17 @@ angular.module('ngAnimate', ['ng'])
     var ELEMENT_NODE = 1;
     var NG_ANIMATE_STATE = '$$ngAnimateState';
     var NG_ANIMATE_CLASS_NAME = 'ng-animate';
-    var rootAnimateState = {disabled:true};
+    var rootAnimateState = {running: true};
 
     $provide.decorator('$animate', ['$delegate', '$injector', '$sniffer', '$rootElement', '$timeout', '$rootScope', '$document',
                             function($delegate,   $injector,   $sniffer,   $rootElement,   $timeout,   $rootScope,   $document) {
 
       $rootElement.data(NG_ANIMATE_STATE, rootAnimateState);
+
+      // disable animations during bootstrap, but once we bootstrapped, enable animations
+      $rootScope.$$postDigest(function() {
+        rootAnimateState.running = false;
+      });
 
       function lookup(name) {
         if (name) {
@@ -760,6 +765,8 @@ angular.module('ngAnimate', ['ng'])
       }
 
       function animationsDisabled(element, parentElement) {
+        if (rootAnimateState.disabled) return true;
+
         if(element[0] == $rootElement[0]) {
           return rootAnimateState.disabled || rootAnimateState.running;
         }
