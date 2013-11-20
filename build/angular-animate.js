@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.2.2-a936a34
+ * @license AngularJS v1.2.2-bc0fa99
  * (c) 2010-2012 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -570,7 +570,7 @@ angular.module('ngAnimate', ['ng'])
         //the animation if any matching animations are not found at all.
         //NOTE: IE8 + IE9 should close properly (run closeAnimation()) in case a NO animation is not found.
         if (animationsDisabled(element, parentElement) || matches.length === 0) {
-          domOperation();
+          fireDOMOperation();
           closeAnimation();
           return;
         }
@@ -603,7 +603,7 @@ angular.module('ngAnimate', ['ng'])
         //this would mean that an animation was not allowed so let the existing
         //animation do it's thing and close this one early
         if(animations.length === 0) {
-          domOperation();
+          fireDOMOperation();
           fireDoneCallbackAsync();
           return;
         }
@@ -623,7 +623,7 @@ angular.module('ngAnimate', ['ng'])
         //is so that the CSS classes present on the element can be properly examined.
         if((animationEvent == 'addClass'    && element.hasClass(className)) ||
            (animationEvent == 'removeClass' && !element.hasClass(className))) {
-          domOperation();
+          fireDOMOperation();
           fireDoneCallbackAsync();
           return;
         }
@@ -634,6 +634,7 @@ angular.module('ngAnimate', ['ng'])
 
         element.data(NG_ANIMATE_STATE, {
           running:true,
+          className:className,
           structural:!isClassBased,
           animations:animations,
           done:onBeforeAnimationsComplete
@@ -644,7 +645,7 @@ angular.module('ngAnimate', ['ng'])
         invokeRegisteredAnimationFns(animations, 'before', onBeforeAnimationsComplete);
 
         function onBeforeAnimationsComplete(cancelled) {
-          domOperation();
+          fireDOMOperation();
           if(cancelled === true) {
             closeAnimation();
             return;
@@ -700,6 +701,15 @@ angular.module('ngAnimate', ['ng'])
 
         function fireDoneCallbackAsync() {
           doneCallback && $timeout(doneCallback, 0, false);
+        }
+
+        //it is less complicated to use a flag than managing and cancelling
+        //timeouts containing multiple callbacks.
+        function fireDOMOperation() {
+          if(!fireDOMOperation.hasBeenRun) {
+            fireDOMOperation.hasBeenRun = true;
+            domOperation();
+          }
         }
 
         function closeAnimation() {
