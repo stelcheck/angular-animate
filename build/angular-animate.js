@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.2.2-199ab0d
+ * @license AngularJS v1.2.2-c9d4b2c
  * (c) 2010-2012 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -1029,7 +1029,7 @@ angular.module('ngAnimate', ['ng'])
           var propertyStyle = timings.transitionPropertyStyle;
           if(propertyStyle.indexOf('all') == -1) {
             applyFallbackStyle = true;
-            var fallbackProperty = $sniffer.msie ? '-ms-zoom' : 'clip';
+            var fallbackProperty = $sniffer.msie ? '-ms-zoom' : 'border-spacing';
             style += CSS_PREFIX + 'transition-property: ' + propertyStyle + ', ' + fallbackProperty + '; ';
             style += CSS_PREFIX + 'transition-duration: ' + timings.transitionDurationStyle + ', ' + timings.transitionDuration + 's; ';
           }
