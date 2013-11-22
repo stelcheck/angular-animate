@@ -2515,6 +2515,36 @@ describe("ngAnimate", function() {
     expect(element.hasClass('yellow-add')).toBe(true);
   }));
 
+  it("should cancel and perform the dom operation only after the reflow has run",
+    inject(function($compile, $rootScope, $animate, $sniffer, $timeout) {
+
+    if (!$sniffer.transitions) return;
+
+    ss.addRule('.green-add', '-webkit-transition:1s linear all;' +
+                                     'transition:1s linear all;');
+
+    ss.addRule('.red-add', '-webkit-transition:1s linear all;' +
+                                   'transition:1s linear all;');
+
+    var element = $compile('<div></div>')($rootScope);
+    $rootElement.append(element);
+    jqLite($document[0].body).append($rootElement);
+
+    $animate.addClass(element, 'green');
+    expect(element.hasClass('green-add')).toBe(true);
+
+    $animate.addClass(element, 'red');
+    expect(element.hasClass('red-add')).toBe(true);
+
+    expect(element.hasClass('green')).toBe(false);
+    expect(element.hasClass('red')).toBe(false);
+
+    $timeout.flush();
+
+    expect(element.hasClass('green')).toBe(true);
+    expect(element.hasClass('red')).toBe(true);
+  }));
+
   it('should enable and disable animations properly on the root element', function() {
     var count = 0;
     module(function($animateProvider) {
@@ -2633,4 +2663,62 @@ describe("ngAnimate", function() {
     expect(element.hasClass('base-class')).toBe(true);
   }));
 
+  it('should block and unblock transitions before the dom operation occurs',
+    inject(function($rootScope, $compile, $rootElement, $document, $animate, $sniffer, $timeout) {
+
+    if (!$sniffer.transitions) return;
+
+    $animate.enabled(true);
+
+    ss.addRule('.cross-animation', '-webkit-transition:1s linear all;' +
+                                           'transition:1s linear all;');
+
+    var capturedProperty = 'none';
+
+    var element = $compile('<div class="cross-animation"></div>')($rootScope);
+    $rootElement.append(element);
+    jqLite($document[0].body).append($rootElement);
+
+    var node = element[0];
+    node._setAttribute = node.setAttribute;
+    node.setAttribute = function(prop, val) {
+      if(prop == 'class' && val.indexOf('trigger-class') >= 0) {
+        var propertyKey = ($sniffer.vendorPrefix == 'Webkit' ? '-webkit-' : '') + 'transition-property';
+        capturedProperty = element.css(propertyKey);
+      }
+      node._setAttribute(prop, val);
+    };
+
+    $animate.addClass(element, 'trigger-class');
+
+    $timeout.flush();
+
+    expect(capturedProperty).not.toBe('none');
+  }));
+
+  it('should block and unblock keyframe animations around the reflow operation',
+    inject(function($rootScope, $compile, $rootElement, $document, $animate, $sniffer, $timeout) {
+
+    if (!$sniffer.animations) return;
+
+    $animate.enabled(true);
+
+    ss.addRule('.cross-animation', '-webkit-animation:1s my_animation;' +
+                                           'animation:1s my_animation;');
+
+    var element = $compile('<div class="cross-animation"></div>')($rootScope);
+    $rootElement.append(element);
+    jqLite($document[0].body).append($rootElement);
+
+    var node = element[0];
+    var animationKey = $sniffer.vendorPrefix == 'Webkit' ? 'WebkitAnimation' : 'animation';
+
+    $animate.addClass(element, 'trigger-class');
+
+    expect(node.style[animationKey]).toContain('none');
+
+    $timeout.flush();
+
+    expect(node.style[animationKey]).not.toContain('none');
+  }));
 });

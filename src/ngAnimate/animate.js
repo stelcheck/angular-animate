@@ -549,7 +549,8 @@ angular.module('ngAnimate', ['ng'])
         and the onComplete callback will be fired once the animation is fully complete.
       */
       function performAnimation(animationEvent, className, element, parentElement, afterElement, domOperation, doneCallback) {
-        var classes = (element.attr('class') || '') + ' ' + className;
+        var currentClassName = element.attr('class') || '';
+        var classes = currentClassName + ' ' + className;
         var animationLookup = (' ' + classes).replace(/\s+/g,'.');
         if (!parentElement) {
           parentElement = afterElement ? afterElement.parent() : element.parent();
@@ -602,21 +603,42 @@ angular.module('ngAnimate', ['ng'])
           return;
         }
 
+        //this value will be searched for class-based CSS className lookup. Therefore,
+        //we prefix and suffix the current className value with spaces to avoid substring
+        //lookups of className tokens
+        var futureClassName = ' ' + currentClassName + ' ';
         if(ngAnimateState.running) {
           //if an animation is currently running on the element then lets take the steps
           //to cancel that animation and fire any required callbacks
           $timeout.cancel(ngAnimateState.closeAnimationTimeout);
           cleanup(element);
           cancelAnimations(ngAnimateState.animations);
-          (ngAnimateState.done || noop)(true);
+
+          //if the class is removed during the reflow then it will revert the styles temporarily
+          //back to the base class CSS styling causing a jump-like effect to occur. This check
+          //here ensures that the domOperation is only performed after the reflow has commenced
+          if(ngAnimateState.beforeComplete) {
+            (ngAnimateState.done || noop)(true);
+          } else if(isClassBased && !ngAnimateState.structural) {
+            //class-based animations will compare element className values after cancelling the
+            //previous animation to see if the element properties already contain the final CSS
+            //class and if so then the animation will be skipped. Since the domOperation will
+            //be performed only after the reflow is complete then our element's className value
+            //will be invalid. Therefore the same string manipulation that would occur within the
+            //DOM operation will be performed below so that the class comparison is valid...
+            futureClassName = ngAnimateState.event == 'removeClass' ?
+              futureClassName.replace(ngAnimateState.className, '') :
+              futureClassName + ngAnimateState.className + ' ';
+          }
         }
 
         //There is no point in perform a class-based animation if the element already contains
         //(on addClass) or doesn't contain (on removeClass) the className being animated.
         //The reason why this is being called after the previous animations are cancelled
         //is so that the CSS classes present on the element can be properly examined.
-        if((animationEvent == 'addClass'    && element.hasClass(className)) ||
-           (animationEvent == 'removeClass' && !element.hasClass(className))) {
+        var classNameToken = ' ' + className + ' ';
+        if((animationEvent == 'addClass'    && futureClassName.indexOf(classNameToken) >= 0) ||
+           (animationEvent == 'removeClass' && futureClassName.indexOf(classNameToken) == -1)) {
           fireDOMOperation();
           fireDoneCallbackAsync();
           return;
@@ -628,6 +650,7 @@ angular.module('ngAnimate', ['ng'])
 
         element.data(NG_ANIMATE_STATE, {
           running:true,
+          event:animationEvent,
           className:className,
           structural:!isClassBased,
           animations:animations,
@@ -748,10 +771,10 @@ angular.module('ngAnimate', ['ng'])
       function cancelAnimations(animations) {
         var isCancelledFlag = true;
         forEach(animations, function(animation) {
-          if(!animations['beforeComplete']) {
+          if(!animations.beforeComplete) {
             (animation.beforeEnd || noop)(isCancelledFlag);
           }
-          if(!animations['afterComplete']) {
+          if(!animations.afterComplete) {
             (animation.afterEnd || noop)(isCancelledFlag);
           }
         });
@@ -978,7 +1001,9 @@ angular.module('ngAnimate', ['ng'])
         if(timings.transitionDuration > 0) {
           element.addClass(NG_ANIMATE_FALLBACK_CLASS_NAME);
           activeClassName += NG_ANIMATE_FALLBACK_ACTIVE_CLASS_NAME + ' ';
-          node.style[TRANSITION_PROP + PROPERTY_KEY] = 'none';
+          blockTransitions(element);
+        } else {
+          blockKeyframeAnimations(element);
         }
 
         forEach(className.split(' '), function(klass, i) {
@@ -996,6 +1021,25 @@ angular.module('ngAnimate', ['ng'])
         });
 
         return true;
+      }
+
+      function blockTransitions(element) {
+        element[0].style[TRANSITION_PROP + PROPERTY_KEY] = 'none';
+      }
+
+      function blockKeyframeAnimations(element) {
+        element[0].style[ANIMATION_PROP] = 'none 0s';
+      }
+
+      function unblockTransitions(element) {
+        var node = element[0], prop = TRANSITION_PROP + PROPERTY_KEY;
+        if(node.style[prop] && node.style[prop].length > 0) {
+          node.style[prop] = '';
+        }
+      }
+
+      function unblockKeyframeAnimations(element) {
+        element[0].style[ANIMATION_PROP] = '';
       }
 
       function animateRun(element, className, activeAnimationComplete) {
@@ -1018,8 +1062,6 @@ angular.module('ngAnimate', ['ng'])
 
         var applyFallbackStyle, style = '';
         if(timings.transitionDuration > 0) {
-          node.style[TRANSITION_PROP + PROPERTY_KEY] = '';
-
           var propertyStyle = timings.transitionPropertyStyle;
           if(propertyStyle.indexOf('all') == -1) {
             applyFallbackStyle = true;
@@ -1027,6 +1069,8 @@ angular.module('ngAnimate', ['ng'])
             style += CSS_PREFIX + 'transition-property: ' + propertyStyle + ', ' + fallbackProperty + '; ';
             style += CSS_PREFIX + 'transition-duration: ' + timings.transitionDurationStyle + ', ' + timings.transitionDuration + 's; ';
           }
+        } else {
+          unblockKeyframeAnimations(element);
         }
 
         if(ii > 0) {
@@ -1127,6 +1171,7 @@ angular.module('ngAnimate', ['ng'])
         //happen in the first place
         var cancel = preReflowCancellation;
         afterReflow(function() {
+          unblockTransitions(element);
           //once the reflow is complete then we point cancel to
           //the new cancellation function which will remove all of the
           //animation properties from the active animation
@@ -1190,7 +1235,10 @@ angular.module('ngAnimate', ['ng'])
         beforeAddClass : function(element, className, animationCompleted) {
           var cancellationMethod = animateBefore(element, suffixClasses(className, '-add'));
           if(cancellationMethod) {
-            afterReflow(animationCompleted);
+            afterReflow(function() {
+              unblockTransitions(element);
+              animationCompleted();
+            });
             return cancellationMethod;
           }
           animationCompleted();
@@ -1203,7 +1251,10 @@ angular.module('ngAnimate', ['ng'])
         beforeRemoveClass : function(element, className, animationCompleted) {
           var cancellationMethod = animateBefore(element, suffixClasses(className, '-remove'));
           if(cancellationMethod) {
-            afterReflow(animationCompleted);
+            afterReflow(function() {
+              unblockTransitions(element);
+              animationCompleted();
+            });
             return cancellationMethod;
           }
           animationCompleted();
