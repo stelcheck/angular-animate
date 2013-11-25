@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.2.3-2f4009f
+ * @license AngularJS v1.2.3-326b591
  * (c) 2010-2014 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -269,9 +269,16 @@ angular.module('ngAnimate', ['ng'])
 
       $rootElement.data(NG_ANIMATE_STATE, rootAnimateState);
 
-      // disable animations during bootstrap, but once we bootstrapped, enable animations
+      // disable animations during bootstrap, but once we bootstrapped, wait again
+      // for another digest until enabling animations. The reason why we digest twice
+      // is because all structural animations (enter, leave and move) all perform a
+      // post digest operation before animating. If we only wait for a single digest
+      // to pass then the structural animation would render its animation on page load.
+      // (which is what we're trying to avoid when the application first boots up.)
       $rootScope.$$postDigest(function() {
-        rootAnimateState.running = false;
+        $rootScope.$$postDigest(function() {
+          rootAnimateState.running = false;
+        });
       });
 
       function lookup(name) {
