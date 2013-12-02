@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.2.4-b1905d2
+ * @license AngularJS v1.2.4-a04cfa4
  * (c) 2010-2014 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -196,7 +196,7 @@
  *
  * <pre>
  * //!annotate="YourApp" Your AngularJS Module|Replace this or ngModule with the module that you used to define your application.
- * var ngModule = angular.module('YourApp', []);
+ * var ngModule = angular.module('YourApp', ['ngAnimate']);
  * ngModule.animation('.my-crazy-animation', function() {
  *   return {
  *     enter: function(element, done) {
@@ -205,8 +205,8 @@
  *         //this (optional) function will be called when the animation
  *         //completes or when the animation is cancelled (the cancelled
  *         //flag will be set to true if cancelled).
- *       }
- *     }
+ *       };
+ *     },
  *     leave: function(element, done) { },
  *     move: function(element, done) { },
  *
@@ -221,7 +221,7 @@
  *
  *     //animation that can be triggered after the class is removed
  *     removeClass: function(element, className, done) { }
- *   }
+ *   };
  * });
  * </pre>
  *
