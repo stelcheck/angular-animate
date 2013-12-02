@@ -6,6 +6,7 @@ module.exports = function(config, specificOptions) {
     logColors: true,
     browsers: ['Chrome'],
     browserDisconnectTimeout: 10000,
+    browserDisconnectTolerance: 2,
 
 
     // config for Travis CI
@@ -110,6 +111,9 @@ module.exports = function(config, specificOptions) {
 
 
   if (process.env.TRAVIS) {
+    config.transports = ['websocket', 'xhr-polling'];
+    config.browserStack.build = 'TRAVIS ' + process.env.TRAVIS_BUILD_ID;
+
     // Debug logging into a file, that we print out at the end of the build.
     config.loggers.push({
       type: 'file',
