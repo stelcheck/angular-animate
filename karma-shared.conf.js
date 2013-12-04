@@ -60,6 +60,12 @@ module.exports = function(config, specificOptions) {
         platform: 'Windows 2012',
         version: '10'
       },
+      'SL_IE_11': {
+        base: 'SauceLabs',
+        browserName: 'internet explorer',
+        platform: 'Windows 8.1',
+        version: '11'
+      },
 
       'BS_Chrome': {
         base: 'BrowserStack',
@@ -112,9 +118,16 @@ module.exports = function(config, specificOptions) {
 
 
   if (process.env.TRAVIS) {
+    var buildLabel = 'TRAVIS #' + process.env.TRAVIS_BUILD_NUMBER + ' (' + process.env.TRAVIS_BUILD_ID + ')';
+
     config.logLevel = config.LOG_DEBUG;
     config.transports = ['websocket', 'xhr-polling'];
-    config.browserStack.build = 'TRAVIS ' + process.env.TRAVIS_BUILD_ID;
+    config.browserStack.build = buildLabel;
+    config.sauceLabs.build = buildLabel;
+
+    // TODO(vojta): remove once SauceLabs supports websockets.
+    // This speeds up the capturing a bit, as browsers don't even try to use websocket.
+    config.transports = ['xhr-polling'];
 
     // Debug logging into a file, that we print out at the end of the build.
     config.loggers.push({
@@ -144,9 +157,11 @@ module.exports = function(config, specificOptions) {
 
 
     log4js.addAppender(function(log) {
+      var msg = log.data[0];
+
       // ignore web-server's 404s
       if (log.categoryName === 'web-server' && log.level.levelStr === config.LOG_WARN &&
-          IGNORED_404.indexOf(log.data[0]) !== -1) {
+          IGNORED_404.some(function(ignoredLog) {return msg.indexOf(ignoredLog) !== -1})) {
         return;
       }
 
