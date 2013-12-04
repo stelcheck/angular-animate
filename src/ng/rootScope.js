@@ -172,7 +172,7 @@ function $RootScopeProvider(){
        *
        */
       $new: function(isolate) {
-        var Child,
+        var ChildScope,
             child;
 
         if (isolate) {
@@ -182,11 +182,11 @@ function $RootScopeProvider(){
           child.$$asyncQueue = this.$$asyncQueue;
           child.$$postDigestQueue = this.$$postDigestQueue;
         } else {
-          Child = function() {}; // should be anonymous; This is so that when the minifier munges
+          ChildScope = function() {}; // should be anonymous; This is so that when the minifier munges
             // the name it does not become random set of chars. This will then show up as class
             // name in the debugger.
-          Child.prototype = this;
-          child = new Child();
+          ChildScope.prototype = this;
+          child = new ChildScope();
           child.$id = nextUid();
         }
         child['this'] = child;
@@ -266,7 +266,7 @@ function $RootScopeProvider(){
 
 
 
-           // Using a listener function 
+           // Using a listener function
            var food;
            scope.foodCounter = 0;
            expect(scope.foodCounter).toEqual(0);
@@ -291,7 +291,7 @@ function $RootScopeProvider(){
            // Update food and run digest.  Now the counter will increment
            food = 'cheeseburger';
            scope.$digest();
-           expect(scope.foodCounter).toEqual(1);  
+           expect(scope.foodCounter).toEqual(1);
 
        * </pre>
        *
@@ -710,7 +710,7 @@ function $RootScopeProvider(){
        *
        *    - `string`: execute using the rules as defined in  {@link guide/expression expression}.
        *    - `function(scope)`: execute the function with the current `scope` parameter.
-       * 
+       *
        * @param {(object)=} locals Local variables object, useful for overriding values in scope.
        * @returns {*} The result of evaluating the expression.
        */
