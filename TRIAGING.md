@@ -10,6 +10,13 @@ The labels are used later on for planning releases.
     * these tags can be used for labeling a closed issue/PR with a reason why it was closed. (we can add reasons as we need them, right there are only a few rejection reasons. it doesn't make sense to label issues that were fixed or prs that were merged)
 
 
+## Automatic processing ##
+
+We have automatic tools (e.g. Mary Poppins) that automatically add comments / labels to issues and PRs.
+The following is done automatically and should not be done manually:
+
+* Label "cla: yes" or "cla: no" for pull requests
+
 ## Process ##
 
 1. Open list of [non triaged issues](https://github.com/angular/angular.js/issues?direction=desc&milestone=none&page=1&sort=created&state=open)
@@ -29,7 +36,7 @@ The labels are used later on for planning releases.
     * Reproducible on master? - http://code.angularjs.org/snapshot/
 
 1. Non bugs:
-    * Label "Type: Feature" or "Type: Chore"
+    * Label "Type: Feature" or "Type: Chore" or "Type: Perf"
     * Label "needs: breaking change" - if needed
     * Understandable? - verify if the description of the request is clear. if not ask for clarification
     * Goals of angular core? - Often new features should be implemented as a third-party module rather than an addition to the core.
@@ -46,8 +53,6 @@ The labels are used later on for planning releases.
     * large - changes to many components in angular or any changes to $compile, ngRepeat or other "fun" components
 1. Label "PRs welcome" for "GH: issue"
     * if complexity is small or medium and the problem as well as solution are well captured in the issue
-1. Label "cla: yes" for "GH: PR": 
-    * otherwise prompt the contributor to sign the CLA
 1. Label "origin: google" for issues from Google
 1. Label "high priority" for security issues, major performance regressions or memory leaks
 
